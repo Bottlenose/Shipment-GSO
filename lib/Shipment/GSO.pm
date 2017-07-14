@@ -30,6 +30,12 @@ has 'password' => (
     isa => Str
 );
 
+=head2 account
+
+Account # with GSO. Included with most requests.
+
+=cut
+
 has 'account' => (
     is  => 'rw',
     isa => Int
@@ -40,7 +46,20 @@ has 'pickup_service' => (
     isa => Int
 );
 
+=head2 pickup_date
+
+From GSO: Date when the shipment will be shipped. Ship date should be within 14 business days excluding weekends
+and service holidays.
+
+=cut
+
 has '+pickup_date' => ( default => 'now' );
+
+=head2 interface
+
+An instance of the GSO SOAP interface.
+
+=cut
 
 has 'interface' => (
     is  => 'lazy',
@@ -48,6 +67,12 @@ has 'interface' => (
 );
 
 sub _build_interface { Shipment::GSO::WSDL::Interfaces::GSOWebService::GSOWebServiceSoap->new() }
+
+=head2 _auth_header
+
+Convenience method for the auth header required for all requests.
+
+=cut
 
 sub _auth_header {
     my $self = shift;
@@ -57,42 +82,22 @@ sub _auth_header {
     };
 }
 
+=head1 Class Methods
+
+=head2 _build_services
+
+This calls GetShippingRatesAndTimes from the GSO web service.
+
+Each DeliveryService that is returned is added to services
+
+The following service mapping is used:
+  * ground => 'CPS' (GSO Ground)
+  * priority => 'PDS' (Priority Overnight)
+
+=cut
+
 sub _build_services {
     my $self = shift;
-
-    # 0  HASH(0x76b97f8)
-    #    'GuaranteedDeliveryTime' => '10:30 AM  '
-    #    'ServiceCode' => 'PDS'
-    #    'ServiceDescription' => 'Priority Overnight'
-    # 1  HASH(0x76b92d0)
-    #    'GuaranteedDeliveryTime' => '10:30 AM  '
-    #    'ServiceCode' => 'SDS'
-    #    'ServiceDescription' => 'Saturday Delivery'
-    # 2  HASH(0x76b8dc0)
-    #    'GuaranteedDeliveryTime' => '8:00 AM   '
-    #    'ServiceCode' => 'EPS'
-    #    'ServiceDescription' => 'Early Priority Overnight'
-    # 3  HASH(0x76b9420)
-    #    'GuaranteedDeliveryTime' => '8:00 AM   '
-    #    'ServiceCode' => 'ESS'
-    #    'ServiceDescription' => 'Early Saturday'
-    # 4  HASH(0x76b8f58)
-    #    'GuaranteedDeliveryTime' => '12:00 PM  '
-    #    'ServiceCode' => 'NPS'
-    #    'ServiceDescription' => 'Noon Priority'
-    # 5  HASH(0x76b96c0)
-    #    'ServiceCode' => 'SAM'
-    #    'ServiceDescription' => 'AM Select 8a-12p'
-    # 6  HASH(0x76b9468)
-    #    'ServiceCode' => 'SPM'
-    #    'ServiceDescription' => 'PM Select 12p-4p'
-    # 7  HASH(0x76b93c0)
-    #    'ServiceCode' => 'SEV'
-    #    'ServiceDescription' => 'Evening Select 4p-8p'
-    # 8  HASH(0x76b9060)
-    #    'GuaranteedDeliveryTime' => '5:00 PM   '
-    #    'ServiceCode' => 'CPS'
-    #    'ServiceDescription' => 'GSO Ground'
 
     my $service_args;
 
