@@ -1,4 +1,5 @@
 package Shipment::GSO;
+#ABSTRACT: Shipment::GSO - Interface to Golden State Overnight Shipping Web Services
 use strict;
 use warnings;
 
