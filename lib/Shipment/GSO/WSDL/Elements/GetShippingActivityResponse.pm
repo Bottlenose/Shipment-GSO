@@ -1,0 +1,183 @@
+
+package Shipment::GSO::WSDL::Elements::GetShippingActivityResponse;
+use strict;
+use warnings;
+
+{ # BLOCK to scope variables
+
+sub get_xmlns { 'http://gso.com/GsoShipWS' }
+
+__PACKAGE__->__set_name('GetShippingActivityResponse');
+__PACKAGE__->__set_nillable();
+__PACKAGE__->__set_minOccurs();
+__PACKAGE__->__set_maxOccurs();
+__PACKAGE__->__set_ref();
+
+use base qw(
+    SOAP::WSDL::XSD::Typelib::Element
+    SOAP::WSDL::XSD::Typelib::ComplexType
+);
+
+our $XML_ATTRIBUTE_CLASS;
+undef $XML_ATTRIBUTE_CLASS;
+
+sub __get_attr_class {
+    return $XML_ATTRIBUTE_CLASS;
+}
+
+use Class::Std::Fast::Storable constructor => 'none';
+use base qw(SOAP::WSDL::XSD::Typelib::ComplexType);
+
+Class::Std::initialize();
+
+{ # BLOCK to scope variables
+
+my %GetShippingActivityResult_of :ATTR(:get<GetShippingActivityResult>);
+
+__PACKAGE__->_factory(
+    [ qw(        GetShippingActivityResult
+
+    ) ],
+    {
+        'GetShippingActivityResult' => \%GetShippingActivityResult_of,
+    },
+    {
+        'GetShippingActivityResult' => 'Shipment::GSO::WSDL::Types::GetShippingActivityResult',
+    },
+    {
+
+        'GetShippingActivityResult' => 'GetShippingActivityResult',
+    }
+);
+
+} # end BLOCK
+
+
+
+
+
+
+} # end of BLOCK
+
+
+
+1;
+
+
+=pod
+
+=head1 NAME
+
+Shipment::GSO::WSDL::Elements::GetShippingActivityResponse
+
+=head1 DESCRIPTION
+
+Perl data type class for the XML Schema defined element
+GetShippingActivityResponse from the namespace http://gso.com/GsoShipWS.
+
+
+
+
+
+
+
+=head1 PROPERTIES
+
+The following properties may be accessed using get_PROPERTY / set_PROPERTY
+methods:
+
+=over
+
+=item * GetShippingActivityResult
+
+ $element->set_GetShippingActivityResult($data);
+ $element->get_GetShippingActivityResult();
+
+
+
+
+
+=back
+
+
+=head1 METHODS
+
+=head2 new
+
+ my $element = Shipment::GSO::WSDL::Elements::GetShippingActivityResponse->new($data);
+
+Constructor. The following data structure may be passed to new():
+
+ {
+   GetShippingActivityResult =>  { # Shipment::GSO::WSDL::Types::GetShippingActivityResult
+     ShipmentInfo =>  { # Shipment::GSO::WSDL::Types::ArrayOfShipmentInfo
+       ShipmentInfo =>  { # Shipment::GSO::WSDL::Types::ShipmentInfo
+         Package =>  { # Shipment::GSO::WSDL::Types::Package
+           AccountNumber =>  $some_value, # int
+           TrackingNumber =>  $some_value, # string
+           ShipperCompany =>  $some_value, # string
+           ShipperContact =>  $some_value, # string
+           ShipperPhone =>  $some_value, # string
+           ShipperEmail =>  $some_value, # string
+           PickupAddress1 =>  $some_value, # string
+           PickupAddress2 =>  $some_value, # string
+           PickupCity =>  $some_value, # string
+           PickupState =>  $some_value, # string
+           PickupZip =>  $some_value, # string
+           ShipToCompany =>  $some_value, # string
+           ShipToAttention =>  $some_value, # string
+           ShipToPhone =>  $some_value, # string
+           ShipToEmail =>  $some_value, # string
+           DeliveryAddress1 =>  $some_value, # string
+           DeliveryAddress2 =>  $some_value, # string
+           DeliveryCity =>  $some_value, # string
+           DeliveryState =>  $some_value, # string
+           DeliveryZip =>  $some_value, # string
+           ServiceCode =>  $some_value, # string
+           ShipmentReference =>  $some_value, # string
+           DeclaredValue =>  $some_value, # decimal
+           CODValue =>  $some_value, # decimal
+           SpecialInstructions =>  $some_value, # string
+           Weight =>  $some_value, # decimal
+           SignatureCode => $some_value, # SignatureType
+           AddnShipperReference1 =>  $some_value, # string
+           AddnShipperReference2 =>  $some_value, # string
+         },
+         Delivery =>  { # Shipment::GSO::WSDL::Types::Delivery
+           ShipDate =>  $some_value, # dateTime
+           ScheduledDate =>  $some_value, # dateTime
+           DeliveryDate =>  $some_value, # dateTime
+           TransitStatus =>  $some_value, # string
+           DeliveryTime =>  $some_value, # string
+           SignedBy =>  $some_value, # string
+           Signature =>  $some_value, # base64Binary
+         },
+         ShipmentCharges =>  { # Shipment::GSO::WSDL::Types::ShipmentCharges
+           TransportationCharge =>  $some_value, # decimal
+           CODCharge =>  $some_value, # decimal
+           InsuranceCharge =>  $some_value, # decimal
+           OtherCharge =>  $some_value, # decimal
+           FuelSurcharge =>  $some_value, # decimal
+           TotalCharge =>  $some_value, # decimal
+         },
+         TransitNotes =>  { # Shipment::GSO::WSDL::Types::ArrayOfTransitNote
+           TransitNote =>  { # Shipment::GSO::WSDL::Types::TransitNote
+             EventDate =>  $some_value, # dateTime
+             Comments =>  $some_value, # string
+           },
+         },
+       },
+     },
+     Result =>  { # Shipment::GSO::WSDL::Types::Result
+       Code =>  $some_value, # int
+       Message =>  $some_value, # string
+     },
+   },
+ },
+
+=head1 AUTHOR
+
+Generated by SOAP::WSDL
+
+=cut
+
