@@ -115,24 +115,24 @@ sub _build_services {
                 },
             },
             $self->_auth_header
-        )->get_GetShippingRatesAndTimesResult->get_DeliveryServices;
+        )->get_GetShippingRatesAndTimesResult->get_DeliveryServices->get_DeliveryService;
         $responses = [$responses] unless ref $responses eq 'ARRAY';
         foreach my $service (@$responses) {
-            if ( !defined $service_args->{ $service->as_hash_ref->{DeliveryService}->{ServiceCode} }
+            if ( !defined $service_args->{ $service->as_hash_ref->{ServiceCode} }
                 ) {
-                $service_args->{ $service->as_hash_ref->{DeliveryService}->{ServiceCode} }->{name}
-                    = $service->as_hash_ref->{DeliveryService}->{ServiceDescription};
-                $service_args->{ $service->as_hash_ref->{DeliveryService}->{ServiceCode} }->{id}
-                    = $service->as_hash_ref->{DeliveryService}->{ServiceCode};
+                $service_args->{ $service->as_hash_ref->{ServiceCode} }->{name}
+                    = $service->as_hash_ref->{ServiceDescription};
+                $service_args->{ $service->as_hash_ref->{ServiceCode} }->{id}
+                    = $service->as_hash_ref->{ServiceCode};
             } else {
                 $service->get_DeliveryService->get_ShipmentCharges->set_TotalCharge(
-                    $service_args->{ $service->as_hash_ref->{DeliveryService}->{ServiceCode} }
+                    $service_args->{ $service->as_hash_ref->{ServiceCode} }
                         ->{cost}->as_string
                         + $service->get_DeliveryService->get_ShipmentCharges->get_TotalCharge
                         ->as_string );
             }
-            $service_args->{ $service->as_hash_ref->{DeliveryService}->{ServiceCode} }->{cost}
-                = $service->get_DeliveryService->get_ShipmentCharges->get_TotalCharge;
+            $service_args->{ $service->as_hash_ref->{ServiceCode} }->{cost}
+                = $service->get_ShipmentCharges->get_TotalCharge;
         }
     }
 
