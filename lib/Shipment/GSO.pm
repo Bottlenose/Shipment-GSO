@@ -1,7 +1,8 @@
 package Shipment::GSO;
 #ABSTRACT: Shipment::GSO - Interface to Golden State Overnight Shipping Web Services
-use strict;
-use warnings;
+use Shipment::GSO::Base;
+
+our $VERSION = '1.0.0';
 
 use Try::Tiny;
 use Shipment::SOAP::WSDL;
