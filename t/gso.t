@@ -65,12 +65,14 @@ if ( $username && $password && $account ) {
         packages     => \@packages
     );
 
+    like $shipment->_token, qr{[\+/A-z0-9]{96}}, q{_token};
+
     ok( defined $shipment, 'got a shipment' );
 
     ok( defined $shipment->from_address, 'got a shipment->from_address address' );
     if ( defined $shipment->from_address ) {
-        is( $shipment->from_address->state_code, 'CA', 'province_code' );
-        is( $shipment->from_address->country_code,  'US', 'country_code' );
+        is( $shipment->from_address->state_code,   'CA', 'province_code' );
+        is( $shipment->from_address->country_code, 'US', 'country_code' );
         is( $shipment->from_address->address_components->{number},
             '6023', 'address_components->{number}' );
         is( $shipment->from_address->address_components->{street},
@@ -108,7 +110,7 @@ if ( $username && $password && $account ) {
     is( $shipment->services->{ground}->id, 'CPS', 'ground service_id' )
         if defined $shipment->services->{ground};
 
-    # FIXME: Our current credentials only return ground rates. 
+    # FIXME: Our current credentials only return ground rates.
     # ok( defined $shipment->services->{priority}, 'got a priority service' );
     # is( $shipment->services->{priority}->id, 'PDS', 'priority service_id' )
     #     if defined $shipment->services->{priority};
@@ -121,11 +123,11 @@ if ( $username && $password && $account ) {
     # TODO: Support etd.
     # is( $shipment->service->etd, 2, 'estimated transit days' ) if defined $shipment->service;
 
-    # TODO: Support ship and other document generation functionality.
-    # is( $shipment->service->cost->value, $rate, 'rate matches actual cost') if defined $shipment->service;
-    # ok( defined $shipment->documents, 'got documents' );
-    # is( $shipment->documents->content_type, 'application/pdf', 'documents are pdf') if defined $shipment->documents;
-    # ok( defined $shipment->get_package(0)->cost->value, 'got cost' );
-    # ok( defined $shipment->get_package(0)->label, 'got label' );
-    # is( $shipment->get_package(0)->label->content_type, 'application/pdf', 'label is a pdf') if defined $shipment->get_package(0)->label;
+# TODO: Support ship and other document generation functionality.
+# is( $shipment->service->cost->value, $rate, 'rate matches actual cost') if defined $shipment->service;
+# ok( defined $shipment->documents, 'got documents' );
+# is( $shipment->documents->content_type, 'application/pdf', 'documents are pdf') if defined $shipment->documents;
+# ok( defined $shipment->get_package(0)->cost->value, 'got cost' );
+# ok( defined $shipment->get_package(0)->label, 'got label' );
+# is( $shipment->get_package(0)->label->content_type, 'application/pdf', 'label is a pdf') if defined $shipment->get_package(0)->label;
 }

@@ -1,8 +1,10 @@
 package Shipment::GSO;
+
 #ABSTRACT: Shipment::GSO - Interface to Golden State Overnight Shipping Web Services
 use Shipment::GSO::Base;
+use Furl;
 
-our $VERSION = '1.0.0';
+our $VERSION = '2.0.0';
 
 use Try::Tiny;
 use Shipment::SOAP::WSDL;
@@ -119,16 +121,14 @@ sub _build_services {
         )->get_GetShippingRatesAndTimesResult->get_DeliveryServices->get_DeliveryService;
         $responses = [$responses] unless ref $responses eq 'ARRAY';
         foreach my $service (@$responses) {
-            if ( !defined $service_args->{ $service->as_hash_ref->{ServiceCode} }
-                ) {
+            if ( !defined $service_args->{ $service->as_hash_ref->{ServiceCode} } ) {
                 $service_args->{ $service->as_hash_ref->{ServiceCode} }->{name}
                     = $service->as_hash_ref->{ServiceDescription};
                 $service_args->{ $service->as_hash_ref->{ServiceCode} }->{id}
                     = $service->as_hash_ref->{ServiceCode};
             } else {
                 $service->get_DeliveryService->get_ShipmentCharges->set_TotalCharge(
-                    $service_args->{ $service->as_hash_ref->{ServiceCode} }
-                        ->{cost}->as_string
+                          $service_args->{ $service->as_hash_ref->{ServiceCode} }->{cost}->as_string
                         + $service->get_DeliveryService->get_ShipmentCharges->get_TotalCharge
                         ->as_string );
             }
@@ -163,8 +163,7 @@ sub rate {
 
     try {
         $service_id = $self->services->{$service_id}->id;
-    }
-    catch {
+    } catch {
         warn $_ if $self->debug;
         warn "service ($service_id) not available" if $self->debug;
         $self->error("service ($service_id) not available");
@@ -174,6 +173,47 @@ sub rate {
 
     $self->service( $self->services->{$service_id} );
 
+}
+
+=head1 CLASS METHODS AND ATTRIBUTES
+
+=head2 _endpoint
+
+The API endpoint.
+
+https://api.gso.com/Rest/v1
+
+=cut
+
+sub _end_point {
+    'https://api.gso.com/Rest/v1';
+}
+
+=head2 _token
+
+GSO uses a two step authentication process. This method gets the authentication token from GSO. Each request to GSO
+must have this token.
+
+=cut
+
+my $_token;
+
+sub _token {
+    my $self = shift;
+
+    return $_token if $_token;
+
+    my $furl = Furl->new;
+    my $res  = $furl->get(
+        $self->_end_point . '/token',
+        [   account  => $self->account,
+            username => $self->username,
+            password => $self->password
+        ]
+    );
+
+    $res->headers->header('token')
+        || croak q{Could not get authentication token for account } . $self->account;
 }
 
 1;
