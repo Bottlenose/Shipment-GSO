@@ -1,8 +1,4 @@
-#!/usr/bin/env perl
-use strict;
-use warnings;
-
-use Test::More tests => 23;
+use Shipment::GSO::Base Test;
 
 my ( $username, $password, $account ) = @ARGV;
 
@@ -131,3 +127,5 @@ if ( $username && $password && $account ) {
 # ok( defined $shipment->get_package(0)->label, 'got label' );
 # is( $shipment->get_package(0)->label->content_type, 'application/pdf', 'label is a pdf') if defined $shipment->get_package(0)->label;
 }
+
+done_testing;

@@ -6,9 +6,8 @@ our $VERSION = '2.0.0';
 use Shipment::GSO::Base Class;
 
 use Furl;
+use JSON::XS;
 use Try::Tiny;
-use Shipment::SOAP::WSDL;
-use Shipment::GSO::WSDL::Interfaces::GSOWebService::GSOWebServiceSoap;
 use REST::Client;
 
 extends 'Shipment::Base';
@@ -50,33 +49,6 @@ and service holidays.
 
 has '+pickup_date' => ( default => 'now' );
 
-=head2 interface
-
-An instance of the GSO SOAP interface.
-
-=cut
-
-has 'interface' => (
-    is  => 'lazy',
-    isa => InstanceOf ['Shipment::GSO::WSDL::Interfaces::GSOWebService::GSOWebServiceSoap']
-);
-
-sub _build_interface { Shipment::GSO::WSDL::Interfaces::GSOWebService::GSOWebServiceSoap->new() }
-
-=head2 _auth_header
-
-Convenience method for the auth header required for all requests.
-
-=cut
-
-sub _auth_header {
-    my $self = shift;
-    return {
-        UserName => $self->username,
-        Password => $self->password
-    };
-}
-
 =head1 Class Methods
 
 =head2 _build_services
@@ -95,49 +67,36 @@ sub _build_services {
     my $self = shift;
 
     my $service_args;
-
-    foreach my $package ( @{ $self->packages } ) {
-        my $responses = $self->interface->GetShippingRatesAndTimes(
-            {   GetShippingRatesAndTimesRequest => {
-                    AccountNumber  => $self->account,
-                    OriginZip      => $self->from_address->postal_code,
-                    DestinationZip => $self->to_address->postal_code,
-                    PackageWeight  => int( $package->weight ),
-                    DeclaredValue  => 100,
-                    CODValue       => 0,
-                    ShipDate       => $self->pickup_date->strftime('%Y-%m-%dT%H:%M:%S'),
-                    PickupService  => $self->pickup_service,
-                },
-            },
-            $self->_auth_header
-        )->get_GetShippingRatesAndTimesResult->get_DeliveryServices->get_DeliveryService;
-        $responses = [$responses] unless ref $responses eq 'ARRAY';
-        foreach my $service (@$responses) {
-            if ( !defined $service_args->{ $service->as_hash_ref->{ServiceCode} } ) {
-                $service_args->{ $service->as_hash_ref->{ServiceCode} }->{name}
-                    = $service->as_hash_ref->{ServiceDescription};
-                $service_args->{ $service->as_hash_ref->{ServiceCode} }->{id}
-                    = $service->as_hash_ref->{ServiceCode};
-            } else {
-                $service->get_DeliveryService->get_ShipmentCharges->set_TotalCharge(
-                          $service_args->{ $service->as_hash_ref->{ServiceCode} }->{cost}->as_string
-                        + $service->get_DeliveryService->get_ShipmentCharges->get_TotalCharge
-                        ->as_string );
-            }
-            $service_args->{ $service->as_hash_ref->{ServiceCode} }->{cost}
-                = $service->get_ShipmentCharges->get_TotalCharge;
-        }
-    }
-
-    map { $service_args->{$_}->{cost} = Data::Currency->new( $service_args->{$_}->{cost}, 'USD' ) }
-        keys %$service_args;
-
     my $services;
 
-    foreach my $k ( keys %$service_args ) {
-        $services->{$k} = Shipment::Service->new( %{ $service_args->{$k} } );
-    }
+    my $weight = 0;
+    map { $weight += $_->weight } @{ $self->packages };
 
+    my $service_types = (
+        decode_json $self->_rest->POST(
+            '/RatesAndTransitTimes',
+            encode_json(
+                {   AccountNumber  => $self->account,
+                    OriginZip      => $self->from_address->postal_code,
+                    DestinationZip => $self->to_address->postal_code,
+                    ShipDate       => $self->pickup_date->strftime('%Y-%m-%dT%H:%M:%S'),
+                    PackageWeight  => int($weight),
+                }
+            )
+        )->responseContent()
+    )->{DeliveryServiceTypes};
+
+    for my $service (@$service_types) {
+        $services->{ $service->{ServiceCode} } = Shipment::Service->new(
+            id      => $service->{ServiceCode},
+            name    => $service->{ServiceDescription},
+            package => Shipment::Package->new(
+                id   => 'YOUR_PACKAGING',
+                name => 'Customer Supplied',
+            ),
+            cost => Data::Currency->new( $service->{ShipmentCharges}->{TotalCharge}, 'USD' )
+        );
+    }
     $services->{ground}   = $services->{CPS} if $services->{CPS};
     $services->{priority} = $services->{PDS} if $services->{PDS};
 
@@ -164,7 +123,6 @@ sub rate {
     return unless $service_id;
 
     $self->service( $self->services->{$service_id} );
-
 }
 
 =head1 CLASS METHODS AND ATTRIBUTES
@@ -222,7 +180,8 @@ sub _rest {
     return $_rest if $_rest;
 
     my $rest = REST::Client->new( host => $self->_endpoint );
-    $rest->addHeader( token => $self->_token );
+    $rest->addHeader( token          => $self->_token );
+    $rest->addHeader( 'Content-Type' => 'application/json' );
 
     $_rest = $rest;
 }
