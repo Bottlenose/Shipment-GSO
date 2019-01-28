@@ -1,23 +1,21 @@
 package Shipment::GSO;
 
 #ABSTRACT: Shipment::GSO - Interface to Golden State Overnight Shipping Web Services
-use Shipment::GSO::Base;
-use Furl;
-
 our $VERSION = '2.0.0';
 
+use Shipment::GSO::Base Class;
+
+use Furl;
 use Try::Tiny;
 use Shipment::SOAP::WSDL;
 use Shipment::GSO::WSDL::Interfaces::GSOWebService::GSOWebServiceSoap;
-use Moo;
-use MooX::Types::MooseLike::Base qw(:all);
-use namespace::clean;
+use REST::Client;
 
 extends 'Shipment::Base';
 
 =head1 Class Attributes
 
-=head2 username, password
+=head2 username, password, account
 
 Credentials required to access GSO Web Service
 
@@ -32,12 +30,6 @@ has 'password' => (
     is  => 'rw',
     isa => Str
 );
-
-=head2 account
-
-Account # with GSO. Included with most requests.
-
-=cut
 
 has 'account' => (
     is  => 'rw',
@@ -185,7 +177,7 @@ https://api.gso.com/Rest/v1
 
 =cut
 
-sub _end_point {
+sub _endpoint {
     'https://api.gso.com/Rest/v1';
 }
 
@@ -205,15 +197,34 @@ sub _token {
 
     my $furl = Furl->new;
     my $res  = $furl->get(
-        $self->_end_point . '/token',
+        $self->_endpoint . '/token',
         [   account  => $self->account,
             username => $self->username,
             password => $self->password
         ]
     );
 
-    $res->headers->header('token')
+    $_token = $res->headers->header('token')
         || croak q{Could not get authentication token for account } . $self->account;
+}
+
+=head2 _rest
+
+An instance of L<REST::Client> for making requests.
+
+=cut
+
+my $_rest;
+
+sub _rest {
+    my $self = shift;
+
+    return $_rest if $_rest;
+
+    my $rest = REST::Client->new( host => $self->_endpoint );
+    $rest->addHeader( token => $self->_token );
+
+    $_rest = $rest;
 }
 
 1;
