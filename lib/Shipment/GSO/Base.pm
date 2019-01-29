@@ -8,9 +8,9 @@ use base 'Import::Base';
 our @IMPORT_MODULES = ( 'strict', 'warnings', 'Carp', );
 
 our %IMPORT_BUNDLES = (
-    Class => ['Moo'],
+    Class => [ 'Moo', 'Types::Standard' => [qw/InstanceOf Int Str/] ],
     Role  => ['Moo::Role'],
-    Test  => [ 'Test2::V0', 'Data::Dumper', ]
+    Test  => [ 'Test2::V0', 'Data::Dumper' ]
 );
 
 1;
