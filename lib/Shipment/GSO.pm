@@ -1,9 +1,9 @@
 package Shipment::GSO;
 
 #ABSTRACT: Shipment::GSO - Interface to Golden State Overnight Shipping Web Services
-our $VERSION = '2.0.0';
-
 use Shipment::GSO::Base Class;
+
+our $VERSION = '2.0.0';
 
 use Furl;
 use JSON::XS;
