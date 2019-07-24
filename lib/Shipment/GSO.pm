@@ -3,7 +3,7 @@ package Shipment::GSO;
 #ABSTRACT: Shipment::GSO - Interface to Golden State Overnight Shipping Web Services
 use Shipment::GSO::Base Class;
 
-our $VERSION = '2.0.0';
+our $VERSION = '2.0.1';
 
 use Furl;
 use JSON::XS;
@@ -117,7 +117,7 @@ sub rate {
     } catch {
         warn $_ if $self->debug;
         warn "service ($service_id) not available" if $self->debug;
-        $self->error("service ($service_id) not available");
+        $self->error("service ($service_id) not available; $_");
         $service_id = '';
     };
     return unless $service_id;
