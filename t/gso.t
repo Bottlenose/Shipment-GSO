@@ -52,7 +52,7 @@ if ( $username && $password && $account ) {
         ),
     );
 
-    my $shipment = Shipment::GSO->new(
+    my %args = (
         username     => $username,
         password     => $password,
         account      => $account,
@@ -60,6 +60,46 @@ if ( $username && $password && $account ) {
         to_address   => $to,
         packages     => \@packages
     );
+
+    for my $date (
+        { y => 2019, m => 7,  d => 28, corrected => '2019-07-29', name => 'Sunday' },
+        { y => 2019, m => 12, d => 25, corrected => '2019-12-26', name => 'Christmas' },
+        { y => 2019, m => 11, d => 28, corrected => '2019-11-29', name => 'Thanksgiving' },
+        { y => 2019, m => 5,  d => 27, corrected => '2019-05-28', name => 'Memorial Day' },
+        {   y         => 2019,
+            m         => 5,
+            d         => 25,
+            corrected => '2019-05-28',
+            name      => 'Saturday before Memorial Day'
+        },
+    ) {
+        my $shipment = Shipment::GSO->new( %args,
+            pickup_date =>
+                DateTime->new( year => $date->{y}, month => $date->{m}, day => $date->{d} ) );
+        $shipment->services;
+        is $shipment->_rest->responseCode(), 400,
+            'Bad pickup_date response code (' . $date->{name} . ')';
+        is $shipment->error,
+            'Failure: Ship date must be within 5 days in future from current date & exclude weekend/GSO service holiday.',
+            'Bad pickup_date (' . $date->{name} . ')';
+
+        $shipment = Shipment::GSO->new( %args,
+            _test_pickup_date =>
+                DateTime->new( year => $date->{y}, month => $date->{m}, day => $date->{d} ) );
+        is $shipment->pickup_date->ymd, $date->{corrected},
+            'Bad pickup_date corrected (' . $date->{name} . ')';
+    }
+
+    my $shipment = Shipment::GSO->new( %args,
+        pickup_date => DateTime->new( year => 2029, month => 5, day => 24 ) );
+    $shipment->services;
+    is $shipment->_rest->responseCode(), 400,
+        'Bad pickup_date response code (too far in the future)';
+    is $shipment->error,
+        'Failure: Ship date must be within 5 days in future from current date & exclude weekend/GSO service holiday.',
+        'Bad pickup_date (too far in the future))';
+
+    $shipment = Shipment::GSO->new(%args);
 
     like $shipment->_token, qr{[\+/A-z0-9]{96}}, q{_token};
 
