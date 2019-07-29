@@ -3,7 +3,7 @@ package Shipment::GSO;
 #ABSTRACT: Shipment::GSO - Interface to Golden State Overnight Shipping Web Services
 use Shipment::GSO::Base Class;
 
-our $VERSION = '2.0.1';
+our $VERSION = '2.0.2';
 
 use Furl;
 use JSON::XS;
@@ -42,12 +42,42 @@ has 'pickup_service' => (
 
 =head2 pickup_date
 
-From GSO: Date when the shipment will be shipped. Ship date should be within 14 business days excluding weekends
+From GSO: Date when the shipment will be shipped. Ship date should be within 5 business days excluding weekends
 and service holidays.
 
 =cut
 
-has '+pickup_date' => ( default => 'now' );
+has '+pickup_date' => ( is => 'lazy', isa => InstanceOf ['DateTime'] );
+
+sub _build_pickup_date {
+    my $self = shift;
+
+    my $dt = $self->_test_pickup_date || DateTime->now;
+
+    # Weekend
+    $dt->add( days => 2 ) if $dt->dow == 6;
+    $dt->add( days => 1 ) if $dt->dow == 7;
+
+    # New Year's Day
+    $dt->add( days => 1 ) if $dt->month == 1 && $dt->day == 1;
+
+    # TODO: Memorial day
+    $dt->add( days => 1 ) if $dt->month == 5 && $dt->dow == 1 && $dt->week_of_month == 5;
+
+    # Idependence Day
+    $dt->add( days => 1 ) if $dt->month == 7 && $dt->day == 4;
+
+    # TODO: Labor Day
+    $dt->add( days => 1 ) if $dt->month == 9 && $dt->dow == 1 && $dt->week_of_month == 1;
+
+    # TODO: Thanksgiving Day
+    $dt->add( days => 1 ) if $dt->month == 11 && $dt->dow == 4 && $dt->weekday_of_month == 4;
+
+    # Christmas Day
+    $dt->add( days => 1 ) if $dt->month == 12 && $dt->day == 25;
+
+    $dt;
+}
 
 =head1 Class Methods
 
@@ -67,38 +97,43 @@ sub _build_services {
     my $self = shift;
 
     my $service_args;
-    my $services;
+    my $services = {};
 
     my $weight = 0;
     map { $weight += $_->weight } @{ $self->packages };
 
-    my $service_types = (
-        decode_json $self->_rest->POST(
-            '/RatesAndTransitTimes',
-            encode_json(
-                {   AccountNumber  => $self->account,
-                    OriginZip      => $self->from_address->postal_code,
-                    DestinationZip => $self->to_address->postal_code,
-                    ShipDate       => $self->pickup_date->strftime('%Y-%m-%dT%H:%M:%S'),
-                    PackageWeight  => int($weight),
-                }
-            )
-        )->responseContent()
-    )->{DeliveryServiceTypes};
+    my $res = $self->_rest->POST(
+        '/RatesAndTransitTimes',
+        encode_json(
+            {   AccountNumber  => $self->account,
+                OriginZip      => $self->from_address->postal_code,
+                DestinationZip => $self->to_address->postal_code,
+                ShipDate       => $self->pickup_date->strftime('%Y-%m-%dT%H:%M:%S'),
+                PackageWeight  => int($weight),
+            }
+        )
+    );
+    my $content = decode_json $res->responseContent;
+    if ( $res->responseCode == 400 ) {
 
-    for my $service (@$service_types) {
-        $services->{ $service->{ServiceCode} } = Shipment::Service->new(
-            id      => $service->{ServiceCode},
-            name    => $service->{ServiceDescription},
-            package => Shipment::Package->new(
-                id   => 'YOUR_PACKAGING',
-                name => 'Customer Supplied',
-            ),
-            cost => Data::Currency->new( $service->{ShipmentCharges}->{TotalCharge}, 'USD' )
-        );
+        for my $error ( @{ $content->{ErrorDetail} } ) {
+            $self->error( $error->{ErrorCode} . ': ' . $error->{ErrorDescription} );
+        }
+    } else {
+        for my $service ( @{ $content->{DeliveryServiceTypes} } ) {
+            $services->{ $service->{ServiceCode} } = Shipment::Service->new(
+                id      => $service->{ServiceCode},
+                name    => $service->{ServiceDescription},
+                package => Shipment::Package->new(
+                    id   => 'YOUR_PACKAGING',
+                    name => 'Customer Supplied',
+                ),
+                cost => Data::Currency->new( $service->{ShipmentCharges}->{TotalCharge}, 'USD' )
+            );
+        }
+        $services->{ground}   = $services->{CPS} if $services->{CPS};
+        $services->{priority} = $services->{PDS} if $services->{PDS};
     }
-    $services->{ground}   = $services->{CPS} if $services->{CPS};
-    $services->{priority} = $services->{PDS} if $services->{PDS};
 
     $services;
 }
@@ -111,6 +146,8 @@ This method sets $self->service to $self->services->{$service_id}
 
 sub rate {
     my ( $self, $service_id ) = @_;
+
+    return unless %{ $self->services };
 
     try {
         $service_id = $self->services->{$service_id}->id;
@@ -185,5 +222,13 @@ sub _rest {
 
     $_rest = $rest;
 }
+
+=head2 _test_pickup_date
+
+DateTime object for testing pickup_dates.
+
+=cut
+
+has _test_pickup_date => ( is => 'ro', isa => Maybe [ InstanceOf ['DateTime'] ] );
 
 1;
