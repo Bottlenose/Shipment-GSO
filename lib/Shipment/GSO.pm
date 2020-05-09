@@ -3,7 +3,7 @@ package Shipment::GSO;
 #ABSTRACT: Shipment::GSO - Interface to Golden State Overnight Shipping Web Services
 use Shipment::GSO::Base Class;
 
-our $VERSION = '2.0.2';
+our $VERSION = '2.0.3';
 
 use Furl;
 use JSON::XS;
@@ -110,6 +110,7 @@ sub _build_services {
                 DestinationZip => $self->to_address->postal_code,
                 ShipDate       => $self->pickup_date->strftime('%Y-%m-%dT%H:%M:%S'),
                 PackageWeight  => int($weight),
+                SignatureCode  => 'ADULT_SIG_REQD'
             }
         )
     );
