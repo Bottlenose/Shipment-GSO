@@ -3,7 +3,7 @@ package Shipment::GSO;
 #ABSTRACT: Shipment::GSO - Interface to Golden State Overnight Shipping Web Services
 use Shipment::GSO::Base Class;
 
-our $VERSION = '2.0.3';
+our $VERSION = '2.0.4';
 
 use Furl;
 use JSON::XS;
@@ -62,9 +62,13 @@ sub _build_pickup_date {
     $dt->add( days => 1 ) if $dt->month == 1 && $dt->day == 1;
 
     # TODO: Memorial day
-    $dt->add( days => 1 ) if $dt->month == 5 && $dt->dow == 1 && $dt->week_of_month == 5;
+    if ( $dt->month == 5 && $dt->dow == 1 ) {
+        my $last = DateTime->last_day_of_month( month => $dt->month, year => $dt->year );
+        $last->subtract( days => 1 ) while $last->dow > 1;
+        $dt->add( days => 1 ) if DateTime->compare( $dt, $last ) == 0;
+    }
 
-    # Idependence Day
+    # Independence Day
     $dt->add( days => 1 ) if $dt->month == 7 && $dt->day == 4;
 
     # TODO: Labor Day
