@@ -2,6 +2,8 @@ use Shipment::GSO::Base Test;
 
 my ( $username, $password, $account ) = @ARGV;
 
+# GSO_USERNAME=GinoVino GSO_ACCOUNT=95950 GSO_PASSWORD=WyMqrnas58
+
 $username ||= $ENV{'GSO_USERNAME'};
 $password ||= $ENV{'GSO_PASSWORD'};
 $account  ||= $ENV{'GSO_ACCOUNT'};
@@ -62,16 +64,17 @@ if ( $username && $password && $account ) {
     );
 
     for my $date (
-        { y => 2019, m => 7,  d => 28, corrected => '2019-07-29', name => 'Sunday' },
-        { y => 2019, m => 12, d => 25, corrected => '2019-12-26', name => 'Christmas' },
-        { y => 2019, m => 11, d => 28, corrected => '2019-11-29', name => 'Thanksgiving' },
-        { y => 2019, m => 5,  d => 27, corrected => '2019-05-28', name => 'Memorial Day' },
+        { y => 2020, m => 5, d => 25, corrected => '2020-05-26', name => 'Memorial Day 2020' },
+        { y => 2019, m => 5, d => 27, corrected => '2019-05-28', name => 'Memorial Day 2019' },
         {   y         => 2019,
             m         => 5,
             d         => 25,
             corrected => '2019-05-28',
             name      => 'Saturday before Memorial Day'
         },
+        { y => 2019, m => 7,  d => 28, corrected => '2019-07-29', name => 'Sunday' },
+        { y => 2019, m => 12, d => 25, corrected => '2019-12-26', name => 'Christmas' },
+        { y => 2019, m => 11, d => 28, corrected => '2019-11-29', name => 'Thanksgiving' },
     ) {
         my $shipment = Shipment::GSO->new( %args,
             pickup_date =>
