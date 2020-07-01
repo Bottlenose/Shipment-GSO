@@ -2,15 +2,15 @@ use Shipment::GSO::Base Test;
 
 my ( $username, $password, $account ) = @ARGV;
 
-# GSO_USERNAME=GinoVino GSO_ACCOUNT=95950 GSO_PASSWORD=WyMqrnas58
+# GLS_USERNAME=GinoVino GLS_ACCOUNT=95950 GLS_PASSWORD=WyMqrnas58
 
-$username ||= $ENV{'GSO_USERNAME'};
-$password ||= $ENV{'GSO_PASSWORD'};
-$account  ||= $ENV{'GSO_ACCOUNT'};
+$username ||= $ENV{'GLS_USERNAME'};
+$password ||= $ENV{'GLS_PASSWORD'};
+$account  ||= $ENV{'GLS_ACCOUNT'};
 
 SKIP: {
     skip
-        "Tests can only be run with a valid GSO Username/Password and Account. The following environment variables are used: GSO_USERNAME GSO_PASSWORD GSO_ACCOUNT.",
+        "Tests can only be run with a valid GLS Username/Password and Account. The following environment variables are used: GLS_USERNAME GLS_PASSWORD GLS_ACCOUNT.",
         23
         unless $username && $password && $account;
 }
@@ -83,7 +83,7 @@ if ( $username && $password && $account ) {
         is $shipment->_rest->responseCode(), 400,
             'Bad pickup_date response code (' . $date->{name} . ')';
         is $shipment->error,
-            'Failure: Ship date must be within 5 days in future from current date & exclude weekend/GSO service holiday.',
+            'Failure: Ship date must be within 5 days in future from current date & exclude weekend/GLS service holiday.',
             'Bad pickup_date (' . $date->{name} . ')';
 
         $shipment = Shipment::GSO->new( %args,
@@ -99,7 +99,7 @@ if ( $username && $password && $account ) {
     is $shipment->_rest->responseCode(), 400,
         'Bad pickup_date response code (too far in the future)';
     is $shipment->error,
-        'Failure: Ship date must be within 5 days in future from current date & exclude weekend/GSO service holiday.',
+        'Failure: Ship date must be within 5 days in future from current date & exclude weekend/GLS service holiday.',
         'Bad pickup_date (too far in the future))';
 
     $shipment = Shipment::GSO->new(%args);
