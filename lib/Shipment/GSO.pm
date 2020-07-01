@@ -3,9 +3,10 @@ package Shipment::GSO;
 #ABSTRACT: Shipment::GSO - Interface to Golden State Overnight Shipping Web Services
 use Shipment::GSO::Base Class;
 
-our $VERSION = '2.0.4';
+our $VERSION = '2.0.5';
 
 use Furl;
+use IO::Socket::SSL;
 use JSON::XS;
 use Try::Tiny;
 use REST::Client;
@@ -195,8 +196,8 @@ sub _token {
 
     return $_token if $_token;
 
-    my $furl = Furl->new;
-    my $res  = $furl->get(
+    my $furl = Furl->new( ssl_opts => { SSL_cipher_list => 'DEFAULT@SECLEVEL=1' } );
+    my $res = $furl->get(
         $self->_endpoint . '/token',
         [   account  => $self->account,
             username => $self->username,
@@ -221,7 +222,13 @@ sub _rest {
 
     return $_rest if $_rest;
 
-    my $rest = REST::Client->new( host => $self->_endpoint );
+    my $rest = REST::Client->new(
+        host      => $self->_endpoint,
+        useragent => LWP::UserAgent->new(
+            agent    => 'Bottlenose-GSO-Shipment/2.0.5',
+            ssl_opts => { SSL_cipher_list => 'DEFAULT@SECLEVEL=1' }
+        )
+    );
     $rest->addHeader( token          => $self->_token );
     $rest->addHeader( 'Content-Type' => 'application/json' );
 
