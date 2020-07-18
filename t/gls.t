@@ -142,7 +142,7 @@ if ( $username && $password && $account ) {
             '6698017', 'phone_components->{phone}' );
     }
 
-    is( $shipment->count_packages, 1, 'shipment has 1 packages' );
+    is $shipment->count_packages, 1, 'shipment has 1 packages';
 
     ok( defined $shipment->services,           'got services' );
     ok( defined $shipment->services->{ground}, 'got a ground service' );
@@ -155,9 +155,7 @@ if ( $username && $password && $account ) {
     #     if defined $shipment->services->{priority};
 
     $shipment->rate('ground');
-
-    ok( defined $shipment->service, 'got a ground rate' );
-    my $rate = $shipment->service->cost->value if defined $shipment->service;
+    is $shipment->service->cost->value, 13.68, q{rate};
 
     # TODO: Support etd.
     # is( $shipment->service->etd, 2, 'estimated transit days' ) if defined $shipment->service;
