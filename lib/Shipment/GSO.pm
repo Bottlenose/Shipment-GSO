@@ -3,7 +3,7 @@ package Shipment::GSO;
 #ABSTRACT: Shipment::GSO - Interface to Golden State Overnight Shipping Web Services
 use Shipment::GSO::Base Class;
 
-our $VERSION = '2.0.5';
+our $VERSION = '2.0.6';
 
 use Furl;
 use IO::Socket::SSL;
@@ -48,7 +48,7 @@ and service holidays.
 
 =cut
 
-has '+pickup_date' => ( is => 'lazy', isa => InstanceOf ['DateTime'] );
+has pickup_date => ( is => 'lazy', isa => InstanceOf ['DateTime'] );
 
 sub _build_pickup_date {
     my $self = shift;
