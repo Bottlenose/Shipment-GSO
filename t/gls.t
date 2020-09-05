@@ -64,6 +64,7 @@ if ( $username && $password && $account ) {
     );
 
     for my $date (
+        { y => 2020, m => 9, d => 5,  corrected => '2020-09-08', name => 'Labor Day 2020' },
         { y => 2020, m => 5, d => 25, corrected => '2020-05-26', name => 'Memorial Day 2020' },
         { y => 2019, m => 5, d => 27, corrected => '2019-05-28', name => 'Memorial Day 2019' },
         {   y         => 2019,
@@ -76,9 +77,16 @@ if ( $username && $password && $account ) {
         { y => 2019, m => 12, d => 25, corrected => '2019-12-26', name => 'Christmas' },
         { y => 2019, m => 11, d => 28, corrected => '2019-11-29', name => 'Thanksgiving' },
     ) {
-        my $shipment = Shipment::GSO->new( %args,
-            pickup_date =>
-                DateTime->new( year => $date->{y}, month => $date->{m}, day => $date->{d} ) );
+        my $shipment = Shipment::GSO->new(
+            %args,
+            pickup_date => DateTime->new(
+                year   => $date->{y},
+                month  => $date->{m},
+                day    => $date->{d},
+                hour   => 0,
+                minute => 0
+            )
+        );
         $shipment->services;
         is $shipment->_rest->responseCode(), 400,
             'Bad pickup_date response code (' . $date->{name} . ')';
@@ -155,7 +163,7 @@ if ( $username && $password && $account ) {
     #     if defined $shipment->services->{priority};
 
     $shipment->rate('ground');
-    is $shipment->service->cost->value, 13.68, q{rate};
+    is $shipment->service->cost->value, within( 13.71, 2 ), q{rate};
 
     # TODO: Support etd.
     # is( $shipment->service->etd, 2, 'estimated transit days' ) if defined $shipment->service;
