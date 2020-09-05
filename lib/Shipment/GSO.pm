@@ -3,7 +3,7 @@ package Shipment::GSO;
 #ABSTRACT: Shipment::GSO - Interface to Golden State Overnight Shipping Web Services
 use Shipment::GSO::Base Class;
 
-our $VERSION = '2.0.6';
+our $VERSION = '2.0.7';
 
 use Furl;
 use IO::Socket::SSL;
@@ -53,8 +53,8 @@ has pickup_date => ( is => 'lazy', isa => InstanceOf ['DateTime'] );
 sub _build_pickup_date {
     my $self = shift;
 
-    my $dt = $self->_test_pickup_date || DateTime->now;
-
+    my $dt = $self->_test_pickup_date || DateTime->today;
+	
     # Weekend
     $dt->add( days => 2 ) if $dt->dow == 6;
     $dt->add( days => 1 ) if $dt->dow == 7;
@@ -73,7 +73,7 @@ sub _build_pickup_date {
     $dt->add( days => 1 ) if $dt->month == 7 && $dt->day == 4;
 
     # TODO: Labor Day
-    $dt->add( days => 1 ) if $dt->month == 9 && $dt->dow == 1 && $dt->week_of_month == 1;
+    $dt->add( days => 1 ) if $dt->month == 9 && $dt->dow == 1 && $dt->day <= 7;
 
     # TODO: Thanksgiving Day
     $dt->add( days => 1 ) if $dt->month == 11 && $dt->dow == 4 && $dt->weekday_of_month == 4;
